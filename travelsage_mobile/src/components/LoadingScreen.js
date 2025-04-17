@@ -1,4 +1,4 @@
-import {View, ActivityIndicator} from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { Text } from 'react-native-paper';
 
 export const Loading = () => {
@@ -8,39 +8,30 @@ export const Loading = () => {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#8ccfcb',
-        fontFamily: 'Sansita-Regular'
-      }}>
-        <Text style={{fontSize: 70, paddingVertical: 40, fontFamily: 'Sansita-Bold'}}>
-          TravelSage
-        </Text>
-        <Text style={{fontSize: 25, fontFamily: 'Sansita-Regular'}}>Explore.Plan.Experience</Text>
-      <ActivityIndicator color={'#000'} animating={true} size="small" />
+        backgroundColor: '#FFF1E6', // soft countryside background
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 60,
+          color: '#FF6B6B', // primary coral tone
+          fontFamily: 'Sansita-Bold',
+          paddingBottom: 20,
+        }}
+      >
+        humsafar
+      </Text>
+      <Text
+        style={{
+          fontSize: 18,
+          fontFamily: 'Sansita-Regular',
+          color: '#1b5363', // calm deep blue
+          marginBottom: 30,
+        }}
+      >
+        Explore · Plan · Experience
+      </Text>
+      <ActivityIndicator color={'#35b5ae'} size="large" />
     </View>
   );
 };
-
-// .swatch_1{
-//   background: #f0f1f1;
-// }
-// .swatch_2{
-//   background: #e9a594;
-// }
-// .swatch_3{
-//   background: #0d1314;
-// }
-// .swatch_4{
-//   background: #1b5363;
-// }
-// .swatch_5{
-//   background: #edc6ba;
-// }
-// .swatch_6{
-//   background: #35b5ae;
-// }
-// .swatch_7{
-//   background: #90564d;
-// }
-// .swatch_8{
-//   background: #8ccfcb;
-// }

@@ -1,83 +1,90 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 
 export default function AuthHome() {
     const navigation = useNavigation();
-    
+
     return (
-        <View style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#F2EFE7', // Soft natural background
-            padding: 20,
-        }}>
+        <View style={styles.container}>
             {/* Title Section */}
-            <View style={{ alignItems: 'center', marginBottom: 50 }}>
-                <Text style={{
-                    fontFamily: 'Poppins-Regular',
-                    color: '#317B83', // Deep teal for text
-                    fontSize: 42,
-                    textAlign: 'center',
-                }}>Discover Your</Text>
-                <Text style={{
-                    fontFamily: 'Poppins-Bold',
-                    color: '#226B6F', // Richer teal accent
-                    fontSize: 50,
-                    textAlign: 'center',
-                }}>Next Journey</Text>
+            <View style={styles.titleContainer}>
+                <Text style={styles.titleLine1}>Discover Your</Text>
+                <Text style={styles.titleLine2}>Next Journey</Text>
             </View>
 
             {/* Buttons Section */}
-            <View style={{ width: '100%', alignItems: 'center' }}>
-                <TouchableOpacity
-                    style={{
-                        backgroundColor: '#76B4BD', // Soft blue-green button
-                        paddingVertical: 15,
-                        paddingHorizontal: 40,
-                        borderRadius: 15,
-                        marginBottom: 20,
-                        width: '80%',
-                        alignItems: 'center',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 3 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 5,
-                        elevation: 3,
-                    }}
-                    onPress={() => navigation.navigate('Login')}
-                >
-                    <Text style={{
-                        fontFamily: 'Poppins-Bold',
-                        fontSize: 22,
-                        color: '#F2EFE7', // Matching soft white
-                    }}>LOGIN</Text>
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.loginButton} onPress={() => navigation.navigate('Login')}>
+                    <Text style={styles.buttonText}>Get Started</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={{
-                        backgroundColor: '#3D9CA8', // Deeper teal for register button
-                        paddingVertical: 15,
-                        paddingHorizontal: 40,
-                        borderRadius: 15,
-                        width: '80%',
-                        alignItems: 'center',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 3 },
-                        shadowOpacity: 0.2,
-                        shadowRadius: 5,
-                        elevation: 3,
-                    }}
-                    onPress={() => navigation.navigate('Register')}
-                >
-                    <Text style={{
-                        fontFamily: 'Poppins-Bold',
-                        fontSize: 22,
-                        color: '#F2EFE7',
-                    }}>REGISTER</Text>
-                </TouchableOpacity>
+                {/* <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('Register')}>
+                    <Text style={styles.buttonText}>REGISTER</Text>
+                </TouchableOpacity> */}
             </View>
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#FFF1E6',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    titleContainer: {
+        alignItems: 'center',
+        marginBottom: 50,
+    },
+    titleLine1: {
+        fontFamily: 'Sansita-Regular',
+        fontSize: 40,
+        color: '#317B83',
+        textAlign: 'center',
+    },
+    titleLine2: {
+        fontFamily: 'Sansita-Bold',
+        fontSize: 48,
+        color: '#226B6F',
+        textAlign: 'center',
+    },
+    buttonContainer: {
+        width: '100%',
+        alignItems: 'center',
+    },
+    loginButton: {
+        backgroundColor: '#FF6B6B',
+        paddingVertical: 15,
+        paddingHorizontal: 40,
+        borderRadius: 20,
+        marginBottom: 20,
+        width: '80%',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        elevation: 4,
+    },
+    registerButton: {
+        backgroundColor: '#317B83',
+        paddingVertical: 15,
+        paddingHorizontal: 40,
+        borderRadius: 20,
+        width: '80%',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        elevation: 4,
+    },
+    buttonText: {
+        fontFamily: 'Sansita-Bold',
+        fontSize: 22,
+        color: '#FFF1E6',
+    },
+});

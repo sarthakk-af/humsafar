@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity, Keyboard } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Icon } from '@rneui/base';
-import { saveFormData, loadFormData } from '../../../utils/blogLocalStorage'; // Adjust the path if necessary
+import { saveFormData, loadFormData } from '../../../utils/blogLocalStorage'; // path unchanged
 
-export default function AddTagsAndLocation({ navigation, route }) {
+export default function AddTagsAndLocation({ navigation }) {
     const [tags, setTags] = useState('');
     const [category, setCategory] = useState('');
     const [location, setLocation] = useState('');
@@ -38,10 +38,7 @@ export default function AddTagsAndLocation({ navigation, route }) {
         { label: "Savannas", value: "Savannas" }
     ];
 
-    console.log(tags)
-
     useEffect(() => {
-        // Load saved form data when the component mounts
         loadFormData('AddTagsAndLocation').then((data) => {
             if (data) {
                 setTags(data.tags.join(', ') || '');
@@ -49,12 +46,33 @@ export default function AddTagsAndLocation({ navigation, route }) {
                 setLocation(data.location || '');
                 setLocationObj(data.locationObj || {});
             }
+        }).catch((err) => {
+            if (!err.message.includes('does not exist')) {
+                console.error('Error loading form data', err);
+            }
         });
     }, []);
+    
+
+    const formatHashtags = (input) => {
+         // Split on space to format each word
+    const words = input.split(' ').map(word => {
+        // Add # if it's missing and it's not empty
+        if (word && !word.startsWith('#')) {
+            return `#${word}`;
+        }
+        return word;
+    });
+
+    // Join back with space
+    const formatted = words.join(' ');
+
+    setTags(formatted);
+    };
 
     const handleNext = () => {
         if (!tags || !category || !location) {
-            setError("Fields required");
+            setError("Please fill out all fields.");
         } else {
             const updatedBlogData = {
                 tags: tags.split(',').map(tag => tag.trim()),
@@ -62,9 +80,8 @@ export default function AddTagsAndLocation({ navigation, route }) {
                 location,
                 locationObj,
             };
-
-            // Save form data
             saveFormData('AddTagsAndLocation', updatedBlogData).then(() => {
+                Keyboard.dismiss();
                 navigation.navigate('TravelTips', updatedBlogData);
             });
         }
@@ -74,9 +91,6 @@ export default function AddTagsAndLocation({ navigation, route }) {
         if (query.length < 3) return;
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
             const data = await response.json();
             setSearchResults(data);
         } catch (error) {
@@ -86,38 +100,38 @@ export default function AddTagsAndLocation({ navigation, route }) {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <Icon name="arrow-back" color="black" size={24} />
-                </TouchableOpacity>
-            </View>
-            <Text style={styles.label}>Category</Text>
+            <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                <Icon name="arrow-back" color="white" size={24}  />
+            </TouchableOpacity>
+
+            <Text style={styles.label}>Select Category</Text>
             <View style={styles.pickerContainer}>
                 <Picker
                     selectedValue={category}
                     onValueChange={(itemValue) => setCategory(itemValue)}
                     style={styles.picker}
                 >
-                    <Picker.Item enabled={false} label='Select Category' value='' />
+                    <Picker.Item label='Choose a category' value='' enabled={false} />
                     {categories.map((item, index) => (
                         <Picker.Item key={index} label={item.label} value={item.value} />
                     ))}
                 </Picker>
             </View>
-            <Text style={styles.label}>Tags (comma-separated)</Text>
+
+            <Text style={styles.label}>Tags (use hashtags like #travel, #sunset)</Text>
             <TextInput
                 style={styles.input}
                 value={tags}
-                onChangeText={setTags}
-                placeholder='Tags (comma-separated)'
+                onChangeText={formatHashtags}
+                placeholder="#beach, #adventure, #hiking"
+                multiline
             />
 
             <Text style={styles.label}>Location</Text>
             <TextInput
                 style={styles.input}
                 value={location}
-                placeholder='Location'
-                multiline
+                placeholder="Search location"
                 onChangeText={(text) => {
                     setLocation(text);
                     handleSearchLocation(text);
@@ -129,12 +143,14 @@ export default function AddTagsAndLocation({ navigation, route }) {
                     data={searchResults}
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={({ item }) => (
-                        <TouchableOpacity onPress={() => {
-                            setLocation(item.display_name);
-                            setLocationObj(item);
-                            setSearchResults([]);
-                        }}>
-                            <Text style={styles.searchResultTitle}>{item.name}</Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setLocation(item.display_name);
+                                setLocationObj(item);
+                                setSearchResults([]);
+                            }}
+                        >
+                            <Text style={styles.searchResultTitle}>{item.name || "Unnamed Place"}</Text>
                             <Text style={styles.searchResult}>{item.display_name}</Text>
                         </TouchableOpacity>
                     )}
@@ -142,7 +158,9 @@ export default function AddTagsAndLocation({ navigation, route }) {
                 />
             )}
 
-            {error !== '' ? <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text> : null}
+            {error !== '' && (
+                <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>{error}</Text>
+            )}
 
             <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
                 <Icon name="arrow-forward" color="white" size={24} />
@@ -155,64 +173,73 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: '#fff',
+        backgroundColor: '#FFECE0',
+        paddingTop:80,
+       // paddingBottom:100,
     },
     label: {
         fontSize: 16,
         fontWeight: 'bold',
-        marginTop: 10,
-        paddingHorizontal: 10
+        marginTop: 24, // Slightly more spacing between sections
+        marginBottom: 8, // Space between label and input
+        color: '#333',
+        paddingHorizontal: 10,
     },
     input: {
-        borderRadius: 5,
-        paddingHorizontal: 10,
-        backgroundColor: '#fff',
-        fontSize: 25,
-        borderBottomColor: '#ddd',
-        borderBottomWidth: 1
+        backgroundColor: '#FFF',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderRadius: 12,
+        fontSize: 16,
+        marginBottom: 24, // More breathing room between fields
+        elevation: 2,
     },
+    
     pickerContainer: {
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 5,
+        backgroundColor: '#FFF',
+        borderRadius: 12,
+        overflow: 'hidden',
         marginBottom: 20,
+        elevation: 2,
     },
     picker: {
-        width: '100%',
         height: 50,
+        width: '100%',
     },
-    searchResult: {
-        fontFamily: 'Sansita-Regular',
-        paddingVertical: 10,
-        fontSize: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
+    backButton: {
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        backgroundColor: '#FF6F91',
+        borderRadius: 25,
+        padding: 12,
+        elevation: 4,
+        zIndex: 999,
     },
     searchResultTitle: {
-        fontFamily: 'Sansita-Bold',
-        fontSize: 20,
+        fontSize: 16,
+        fontWeight: '600',
+        paddingTop: 8,
+    },
+    searchResult: {
+        paddingVertical: 8,
+        fontSize: 14,
+        color: '#555',
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
     },
     fullWidthList: {
         width: '100%',
+        marginTop: 10,
     },
     nextButton: {
         position: 'absolute',
-        bottom: 20,
+        bottom: 30, // Adjust based on device spacing
         right: 20,
-        padding: 15,
-        backgroundColor: '#008080',
-        borderRadius: 30,
+        padding: 16,
+        backgroundColor: '#FF6F91',
+        borderRadius: 35,
+        elevation: 4,
     },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    backButton: {
-        backgroundColor: '#008080',
-        borderRadius: 30,
-        padding: 10,
-        elevation: 5,
-    },
+    
 });

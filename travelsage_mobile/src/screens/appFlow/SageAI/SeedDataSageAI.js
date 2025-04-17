@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Icon } from '@rneui/base';
 
-export default function SeedDataSageAI({ navigation, route }) {
+export default function SeedDataSageAI({ navigation }) {
   const [category, setCategory] = useState('');
   const [locationName, setLocationName] = useState('');
   const [locationObj, setLocationObj] = useState('');
@@ -40,9 +40,6 @@ export default function SeedDataSageAI({ navigation, route }) {
     if (query.length < 3) return;
     try {
       const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
       const data = await response.json();
       setSearchResults(data);
     } catch (error) {
@@ -52,23 +49,11 @@ export default function SeedDataSageAI({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <View style={{
-        flex: 1,
-        justifyContent: 'flex-start',
-        alignItems: 'flex-start'
-      }}>
-        <Text style={{
-          fontFamily: 'Sansita-Bold',
-          fontSize: 75,
-          color: 'black'
-        }}>Welcome to </Text>
-
-        <Text style={{
-          fontFamily: 'Sansita-Bold',
-          fontSize: 100,
-          color: 'black'
-        }}>SageAI</Text>
+      <View style={styles.headerSection}>
+        <Text style={styles.welcomeText}>Welcome to</Text>
+        <Text style={styles.titleText}>SageAI</Text>
       </View>
+
       <Text style={styles.label}>Category</Text>
       <View style={styles.pickerContainer}>
         <Picker
@@ -82,6 +67,20 @@ export default function SeedDataSageAI({ navigation, route }) {
           ))}
         </Picker>
       </View>
+
+      <Text style={styles.label}>Location</Text>
+      <TextInput
+        style={styles.input}
+        value={locationName}
+        placeholder='Enter location name'
+        placeholderTextColor="#aaa"
+        multiline
+        onChangeText={(text) => {
+          setLocationName(text);
+          handleSearchLocation(text);
+        }}
+      />
+
       {searchResults.length > 0 && (
         <FlatList
           data={searchResults}
@@ -100,18 +99,9 @@ export default function SeedDataSageAI({ navigation, route }) {
           style={styles.fullWidthList}
         />
       )}
-      <Text style={styles.label}>Location</Text>
-      <TextInput
-        style={styles.input}
-        value={locationName}
-        placeholder='Location'
-        multiline
-        onChangeText={(text) => {
-          setLocationName(text);
-          handleSearchLocation(text);
-        }}
-      />
-      {error !== '' ? <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text> : null}
+
+      {error !== '' && <Text style={styles.error}>{error}</Text>}
+
       <View style={styles.containerButton}>
         <TouchableOpacity
           style={styles.floatingButton}
@@ -128,81 +118,81 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    justifyContent: 'flex-end',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFF1E6', // countryside cream
+  },
+  headerSection: {
+    marginTop: 10,
+    marginBottom: 30,
+  },
+  welcomeText: {
+    fontFamily: 'Sansita-Bold',
+    fontSize: 50,
+    color: '#1b5363',
+  },
+  titleText: {
+    fontFamily: 'Sansita-Bold',
+    fontSize: 70,
+    color: '#FF6B6B',
   },
   label: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 10,
-    paddingHorizontal: 10
+    fontSize: 18,
+    fontFamily: 'Sansita-Regular',
+    marginBottom: 5,
+    color: '#90564d',
   },
   input: {
-    borderRadius: 5,
-    paddingHorizontal: 10,
     backgroundColor: '#fff',
-    fontSize: 25,
-    borderBottomColor: '#ddd',
-    borderBottomWidth: 1
+    borderRadius: 12,
+    fontSize: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderColor: '#edc6ba',
+    borderWidth: 1,
+    fontFamily: 'Sansita-Regular',
+    marginBottom: 20,
+    color: '#0d1314',
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 5,
+    borderColor: '#edc6ba',
+    borderRadius: 12,
     marginBottom: 20,
+    backgroundColor: '#fff',
   },
   picker: {
-    width: '100%',
     height: 50,
+    fontFamily: 'Sansita-Regular',
   },
   searchResult: {
     fontFamily: 'Sansita-Regular',
-    paddingVertical: 10,
     fontSize: 15,
+    color: '#1b5363',
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
   searchResultTitle: {
     fontFamily: 'Sansita-Bold',
-    fontSize: 20,
+    fontSize: 18,
+    color: '#35b5ae',
+    marginTop: 10,
   },
   fullWidthList: {
     width: '100%',
   },
-  nextButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    padding: 15,
-    backgroundColor: '#008080',
-    borderRadius: 30,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  backButton: {
-    backgroundColor: '#008080',
-    borderRadius: 30,
-    padding: 10,
-    elevation: 5,
-  },
-  floatingButton: {
-    backgroundColor: '#008080',
-    borderRadius: 30,
-    padding: 15,
-    elevation: 5,
+  error: {
+    color: 'red',
+    textAlign: 'center',
+    fontFamily: 'Sansita-Regular',
   },
   containerButton: {
-    paddingVertical: 10,
     alignItems: 'flex-end',
+    marginTop: 10,
   },
   floatingButton: {
-    backgroundColor: '#008080',
+    backgroundColor: '#FF6B6B',
     borderRadius: 50,
-    padding: 10,
+    padding: 15,
     elevation: 5,
   },
 });

@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Image, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Dimensions,
+  Image,
+  Alert
+} from 'react-native';
 import { Icon } from '@rneui/base';
 import Swiper from 'react-native-swiper';
 import RNStorage from 'rn-secure-storage';
@@ -8,399 +17,298 @@ import { useAuth } from '../../../contexts/Auth';
 const { width } = Dimensions.get('window');
 
 export default function PreviewScreen({ navigation }) {
-    const [data, setData] = useState({});
+  const [data, setData] = useState({});
+  const { authData } = useAuth();
 
-    const {authData} = useAuth()
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const addNewBlog = await RNStorage.getItem('AddNewBlog');
+        const uploadScreen = await RNStorage.getItem('UploadScreen');
+        const addTagsAndLocation = await RNStorage.getItem('AddTagsAndLocation');
+        const travelTips = await RNStorage.getItem('TravelTips');
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // Retrieve data stored in secure storage for each screen
-                const addNewBlog = await RNStorage.getItem('AddNewBlog');
-                const uploadScreen = await RNStorage.getItem('UploadScreen');
-                const addTagsAndLocation = await RNStorage.getItem('AddTagsAndLocation');
-                const travelTips = await RNStorage.getItem('TravelTips');
-
-                // Merge all data into one object
-                const mergedData = {
-                    ...JSON.parse(addNewBlog),
-                    ...JSON.parse(uploadScreen),
-                    ...JSON.parse(addTagsAndLocation),
-                    ...JSON.parse(travelTips),
-                };
-
-                console.log("lpgof6yguhijo", mergedData)
-
-                setData(mergedData);
-                console.log("data", data)
-            } catch (error) {
-                console.error('Error retrieving data from secure storage:', error);
-            }
+        const mergedData = {
+          ...JSON.parse(addNewBlog || '{}'),
+          ...JSON.parse(uploadScreen || '{}'),
+          ...JSON.parse(addTagsAndLocation || '{}'),
+          ...JSON.parse(travelTips || '{}'),
         };
 
-        fetchData();
-    }, []);
-
-    const handleEdit = () => {
-        navigation.navigate('AddNewBlog', { ...data });
+        setData(mergedData);
+      } catch (error) {
+        console.error('Error retrieving data from secure storage:', error);
+      }
     };
 
-    const uploadBlog = async () => {
-        try {
-            const formData = new FormData();
-            formData.append('userId', authData._id)
-            formData.append('title', data.title);
-            formData.append('body', data.body);
-            formData.append('dateTime', data.dateTime);
+    fetchData();
+  }, []);
 
-            formData.append('necessaryItems', data.necessaryItems)
-            formData.append('typeOfWear', data.typeOfWear)
-            formData.append('tags', data.tags)
-            formData.append('category', data.category)
-            formData.append('nativeLanguage', data.nativeLanguage)
-            formData.append('locationName', data.locationObj.name)
-            formData.append('locationObj', JSON.stringify(data.locationObj))
-            formData.append('localCuisine', data.localCuisine)
-            formData.append('cultureInsights', data.cultureInsights)
-            formData.append('nearestCommute', data.nearestCommute)
-            formData.append('travelChallenges', data.travelChallenges)
-            formData.append('solutions', data.solutions)
+  const handleEdit = () => {
+    navigation.navigate('AddNewBlog', { ...data });
+  };
 
-            data.images.forEach((image, index) => {
-                formData.append('images', {
-                    uri: image.uri,
-                    type: image.type,
-                    name: `image-${index}.jpg`,
-                });
-            });
+  const uploadBlog = async () => {
+    try {
+      // Re-fetch data just before uploading
+      const addNewBlog = JSON.parse(await RNStorage.getItem('AddNewBlog') || '{}');
+      const uploadScreen = JSON.parse(await RNStorage.getItem('UploadScreen') || '{}');
+      const addTagsAndLocation = JSON.parse(await RNStorage.getItem('AddTagsAndLocation') || '{}');
+      const travelTips = JSON.parse(await RNStorage.getItem('TravelTips') || '{}');
 
-            // formData.append('travelTip', travelTip)
+      const mergedData = {
+        ...addNewBlog,
+        ...uploadScreen,
+        ...addTagsAndLocation,
+        ...travelTips,
+      };
 
-            const response = await fetch('http://192.168.0.101:8000/api/create-blog', {
-                method: 'POST',
-                body: formData,
-            });
+      const formData = new FormData();
+      formData.append('userId', authData._id);
+      formData.append('title', mergedData.title || '');
+      formData.append('body', mergedData.body || '');
+      formData.append('dateTime', mergedData.dateTime || '');
+      formData.append('necessaryItems', mergedData.necessaryItems || []);
+      formData.append('typeOfWear', mergedData.typeOfWear || '');
+      formData.append('tags', mergedData.tags || []);
+      formData.append('category', mergedData.category || '');
+      formData.append('nativeLanguage', mergedData.nativeLanguage || '');
+      formData.append('languageCommunication', mergedData.languageCommunication || '');
+      formData.append('locationName', mergedData.locationObj?.name || '');
+      formData.append('locationObj', JSON.stringify(mergedData.locationObj || {}));
+      formData.append('localCuisine', mergedData.localCuisine || '');
+      formData.append('cultureInsights', mergedData.cultureInsights || '');
+      formData.append('nearestCommute', mergedData.nearestCommute || '');
+      formData.append('travelChallenges', mergedData.travelChallenges || '');
+      formData.append('solutions', mergedData.solutions || '');
 
-            if (!response.ok) {
-                throw new Error('Failed to upload blog');
-            }
+      (mergedData.images || []).forEach((image, index) => {
+        formData.append('images', {
+          uri: image.uri,
+          type: image.type,
+          name: `image-${index}.jpg`,
+        });
+      });
 
-            const responseData = await response.json();
-            if (responseData.success) {
-                RNStorage.removeItem('AddNewBlog');
-                RNStorage.removeItem('UploadScreen');
-                RNStorage.removeItem('AddTagsAndLocation');
-                RNStorage.removeItem('TravelTips');
-                navigation.navigate('HomeScreen');
-            } else {
-                Alert.alert('Error', 'There was an error in saving the blog. Please try again later.');
-            }
-            console.log('Blog uploaded successfully:', responseData);
-        } catch (error) {
-            console.error('Error uploading blog:', error);
-        }
-    };
+      const response = await fetch('http://10.0.22.19:8000/api/create-blog', {
+        method: 'POST',
+        body: formData,
+      });
 
-    return (
-        <View style={styles.container}>
-            {/* <Text>{JSON.stringify(data)}</Text> */}
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.floatingButton} onPress={handleEdit}>
-                    <Icon name="edit" color="white" size={24} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Preview Blog</Text>
-                <TouchableOpacity style={styles.floatingButton} onPress={uploadBlog}>
-                    <Icon name="check" solid={true} color="white" size={24} />
-                </TouchableOpacity>
-            </View>
-            <View style={styles.contentContainer}>
-                <ScrollView stickyHeaderIndices={[1]}>
-                    {data.images && data.images.length > 0 ? (
-                        <Swiper style={styles.wrapper} showsButtons={true}>
-                            {data.images.map((image, index) => (
-                                <View key={index}>
-                                    <View style={styles.slide}>
-                                        <Image source={{ uri: image?.uri }} style={styles.image} />
-                                    </View>
-                                    <Text style={{ textAlign: 'right' }}>{data.locationObj.name}</Text>
-                                </View>
-                            ))}
-                        </Swiper>
-                    ) : (
-                        <Text style={styles.noImagesText}>No images available</Text>
-                    )}
-                    <View style={{ backgroundColor: 'white', elevation: 12 }}>
-                        <Text style={styles.title}>{data?.title}</Text>
-                        <Text style={styles.dateTime}>{data?.dateTime}</Text>
-                    </View>
-                    <View>
-                        <Text style={styles.body}>{data?.body}</Text>
-                    </View>
+      const responseData = await response.json();
 
-                    <View style={{
-                        borderBottomWidth: 2,
-                        borderBottomColor: 'black',
-                        paddingVertical: 10,
-                        padding: 5
-                    }}>
-                        <View>
-                            <Text style={{
-                                fontSize: 25,
-                                fontFamily: 'Sansita-Bold',
-                                color: 'black'
-                            }}>Tags</Text>
-                            <View style={{
-                                paddingVertical: 10
-                            }}>{data.tags?.map((t, i) => (
-                                <Text key={i} style={{
-                                    fontFamily: 'Sansita-Regular',
-                                    fontSize: 18
-                                }}><Icon name="arrow-forward" color="black" size={15} />{t}</Text>
-                            ))}</View>
-                            <View style={{
-                                flexDirection: 'row',
-                                justifyContent: 'flex-start',
-                                alignItems: 'center'
-                            }}>
-                                <Text style={{
-                                    fontFamily: 'Sansita-Bold',
-                                    fontSize: 18,
-                                }}>Category:</Text>
-                                <Text style={{
-                                    fontFamily: 'Sansita-Regular',
-                                    fontSize: 18
-                                }}> {data.category}</Text>
-                            </View>
-                        </View>
-                    </View>
-                    <View style={{
-                        borderBottomWidth: 2,
-                        borderBottomColor: 'black',
-                        paddingVertical: 10,
-                        padding: 5
-                    }}>
-                        <View>
-                            <Text style={{
-                                fontSize: 25,
-                                fontFamily: 'Sansita-Bold',
-                                color: 'black'
-                            }}>Travel Essentials</Text>
-                            <View style={{
-                                paddingVertical: 10
-                            }}>{data.necessaryItems?.map((n, i) => (
-                                <Text key={i} style={{
-                                    fontFamily: 'Sansita-Regular',
-                                    fontSize: 18
-                                }}><Icon name="arrow-forward" color="black" size={15} />{n}</Text>
-                            ))}</View>
-                            <View style={{
-                                flexDirection: 'row',
-                                justifyContent: 'flex-start',
-                                alignItems: 'center'
-                            }}>
-                                <Text style={{
-                                    fontFamily: 'Sansita-Bold',
-                                    fontSize: 18
-                                }}>Type Of wear:</Text>
-                                <Text style={{
-                                    fontFamily: 'Sansita-Regular',
-                                    fontSize: 18
-                                }}> {data.typeOfWear}</Text>
-                            </View>
-                        </View>
-                    </View>
-                    <View style={{
-                        borderBottomWidth: 2,
-                        borderBottomColor: 'black',
-                        paddingVertical: 10,
-                        padding: 5
-                    }}>
-                        <Text style={{
-                            fontSize: 25,
-                            fontFamily: 'Sansita-Bold',
-                            color: 'black'
-                        }}>Language and Communication</Text>
-                        <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'flex-start'
-                        }}>
-                            <Text style={{
-                                fontFamily: 'Sansita-Bold',
-                                fontSize: 18
-                            }}>Native language Spoken:</Text>
-                            <Text style={{
-                                fontFamily: 'Sansita-Regular',
-                                fontSize: 18
-                            }}> {data.nativeLanguage}</Text>
-                        </View>
-                        <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'flex-start',
-                            flexWrap: 'wrap'
-                        }}>
-                            <Text style={{
-                                fontFamily: 'Sansita-Bold',
-                                fontSize: 18
-                            }}>Languages can we communicate: </Text>
-                            <Text style={{
-                                fontFamily: 'Sansita-Regular',
-                                fontSize: 18,
-                            }}>{data.languageCommunication}</Text>
-                        </View>
-                    </View>
-                    <View style={{
-                        borderBottomWidth: 2,
-                        borderBottomColor: 'black',
-                        paddingVertical: 10,
-                        padding: 5
-                    }}>
-                        <Text style={{
-                            fontSize: 25,
-                            fontFamily: 'Sansita-Bold',
-                            color: 'black'
-                        }}>Cultural Insights</Text>
-                        <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'flex-start',
-                            flexWrap: 'wrap'
-                        }}>
-                            <Text style={{
-                                fontFamily: 'Sansita-Bold',
-                                fontSize: 18
-                            }}>Local Cuisine: </Text>
-                            <Text style={{
-                                fontFamily: 'Sansita-Regular',
-                                fontSize: 18
-                            }}>{data.localCuisine}</Text>
-                        </View>
-                        <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'flex-start',
-                            flexWrap: 'wrap'
-                        }}>
-                            <Text style={{
-                                fontFamily: 'Sansita-Bold',
-                                fontSize: 18
-                            }}>Cultural Insights: </Text>
-                            <Text style={{
-                                fontFamily: 'Sansita-Regular',
-                                fontSize: 18
-                            }}>{data.cultureInsights}</Text>
-                        </View>
-                    </View>
-                    <View style={{
-                        borderBottomWidth: 2,
-                        borderBottomColor: 'black',
-                        paddingVertical: 10,
-                        padding: 5
-                    }}>
-                        <Text style={{
-                            fontSize: 25,
-                            fontFamily: 'Sansita-Bold',
-                            color: 'black'
-                        }}>Travel and Logistics</Text>
-                        <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'flex-start',
-                            flexWrap: 'wrap'
-                        }}>
-                            <Text style={{
-                                fontFamily: 'Sansita-Bold',
-                                fontSize: 18
-                            }}>Nearest Commute: </Text>
-                            <Text style={{
-                                fontFamily: 'Sansita-Regular',
-                                fontSize: 18
-                            }}>{data.nearestCommute}</Text>
-                        </View>
-                        <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'flex-start',
-                            flexWrap: 'wrap'
-                        }}>
-                            <Text style={{
-                                fontFamily: 'Sansita-Bold',
-                                fontSize: 18
-                            }}>Travel Challenges: </Text>
-                            <Text style={{
-                                fontFamily: 'Sansita-Regular',
-                                fontSize: 18
-                            }}>{data.travelChallenges}</Text>
-                        </View>
-                        <View style={{
-                            flexDirection: 'row',
-                            justifyContent: 'flex-start',
-                            flexWrap: 'wrap'
-                        }}>
-                            <Text style={{
-                                fontFamily: 'Sansita-Bold',
-                                fontSize: 18
-                            }}>Solutions: </Text>
-                            <Text style={{
-                                fontFamily: 'Sansita-Regular',
-                                fontSize: 18
-                            }}>{data.solutions}</Text>
-                        </View>
-                    </View>
-                </ScrollView>
-            </View>
+      if (!response.ok || !responseData.success) {
+        throw new Error('Failed to upload blog');
+      }
+
+      // ✅ Clear local storage after success
+      await RNStorage.removeItem('AddNewBlog');
+      await RNStorage.removeItem('UploadScreen');
+      await RNStorage.removeItem('AddTagsAndLocation');
+      await RNStorage.removeItem('TravelTips');
+
+      // ✅ Navigate to initial screen
+      navigation.navigate('AddNewBlog');
+    } catch (error) {
+      console.error('Error uploading blog:', error);
+      Alert.alert('Error', 'There was a problem uploading your blog. Please try again.');
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.iconButton} onPress={handleEdit}>
+          <Icon name="edit" color="white" size={20} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Preview Blog</Text>
+        <TouchableOpacity style={styles.iconButton} onPress={uploadBlog}>
+          <Icon name="check" color="white" size={20} />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.content}>
+        {data.images?.length ? (
+          <Swiper style={styles.swiper} showsButtons={true}>
+            {data.images.map((img, i) => (
+              <View key={i} style={styles.slide}>
+                <Image source={{ uri: img.uri }} style={styles.image} />
+                <Text style={styles.imageCaption}>{data.locationObj?.name}</Text>
+              </View>
+            ))}
+          </Swiper>
+        ) : (
+          <Text style={styles.noImagesText}>No images available</Text>
+        )}
+
+        <View style={styles.card}>
+          <Text style={styles.title}>{data.title}</Text>
+          <Text style={styles.date}>{data.dateTime}</Text>
+          <Text style={styles.body}>{data.body}</Text>
         </View>
-    );
+
+        {/* Tags & Category */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tags</Text>
+          {data.tags?.map((tag, i) => (
+            <Text key={i} style={styles.listItem}>
+              <Icon name="arrow-forward" size={15} color="#333" /> {tag}
+            </Text>
+          ))}
+          <Text style={styles.detail}>
+            <Text style={styles.bold}>Category: </Text>{data.category}
+          </Text>
+        </View>
+
+        {/* Travel Essentials */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Travel Essentials</Text>
+          {data.necessaryItems?.map((item, i) => (
+            <Text key={i} style={styles.listItem}>
+              <Icon name="arrow-forward" size={15} color="#333" /> {item}
+            </Text>
+          ))}
+          <Text style={styles.detail}>
+            <Text style={styles.bold}>Type Of Wear: </Text>{data.typeOfWear}
+          </Text>
+        </View>
+
+        {/* Language Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Language and Communication</Text>
+          <Text style={styles.detail}>
+            <Text style={styles.bold}>Native Language Spoken: </Text>{data.nativeLanguage}
+          </Text>
+          <Text style={styles.detail}>
+            <Text style={styles.bold}>Languages for Communication: </Text>{data.languageCommunication}
+          </Text>
+        </View>
+
+        {/* Culture */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Cultural Insights</Text>
+          <Text style={styles.detail}>
+            <Text style={styles.bold}>Local Cuisine: </Text>{data.localCuisine}
+          </Text>
+          <Text style={styles.detail}>
+            <Text style={styles.bold}>Culture: </Text>{data.cultureInsights}
+          </Text>
+        </View>
+
+        {/* Logistics */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Travel and Logistics</Text>
+          <Text style={styles.detail}>
+            <Text style={styles.bold}>Nearest Commute: </Text>{data.nearestCommute}
+          </Text>
+          <Text style={styles.detail}>
+            <Text style={styles.bold}>Challenges: </Text>{data.travelChallenges}
+          </Text>
+          <Text style={styles.detail}>
+            <Text style={styles.bold}>Solutions: </Text>{data.solutions}
+          </Text>
+        </View>
+      </ScrollView>
+    </View>
+  );
 }
 
+const themeColor = '#FF6B6B';
+
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#fff',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    headerTitle: {
-        fontSize: 20,
-    },
-    contentContainer: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    title: {
-        color: 'black',
-        fontFamily: 'Sansita-Bold',
-        fontSize: 30,
-        justifyContent: 'flex-start',
-        backgroundColor: 'white',
-    },
-    dateTime: {
-        fontSize: 16,
-        color: '#555',
-        marginBottom: 10,
-    },
-    body: {
-        // color: 'black',
-        fontFamily: 'Sansita-Bold',
-        fontSize: 20,
-        marginVertical: 20,
-    },
-    image: {
-        width,
-        height: 200,
-    },
-    floatingButton: {
-        backgroundColor: '#008080',
-        borderRadius: 30,
-        padding: 10,
-        elevation: 5,
-    },
-    wrapper: {
-        height: 250, // Adjust the height according to your image size
-    },
-    slide: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'transparent',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    flexDirection: 'row',
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: themeColor,
+  },
+  headerTitle: {
+    fontSize: 20,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  iconButton: {
+    backgroundColor: '#ff8a8a',
+    padding: 10,
+    borderRadius: 50,
+  },
+  content: {
+    padding: 15,
+  },
+  swiper: {
+    height: 220,
+  },
+  slide: {
+    alignItems: 'center',
+  },
+  image: {
+    width: width - 30,
+    height: 200,
+    borderRadius: 12,
+  },
+  imageCaption: {
+    textAlign: 'right',
+    fontSize: 12,
+    marginTop: 5,
+    color: '#888',
+  },
+  card: {
+    backgroundColor: '#fff',
+    marginTop: 15,
+    padding: 15,
+    borderRadius: 12,
+    elevation: 2,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#222',
+  },
+  date: {
+    fontSize: 14,
+    color: '#666',
+    marginVertical: 8,
+  },
+  body: {
+    fontSize: 18,
+    color: '#444',
+  },
+  section: {
+    backgroundColor: '#fff',
+    marginTop: 15,
+    padding: 15,
+    borderRadius: 12,
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: themeColor,
+    marginBottom: 10,
+  },
+  listItem: {
+    fontSize: 16,
+    color: '#444',
+    marginBottom: 4,
+    paddingLeft: 10,
+  },
+  detail: {
+    fontSize: 16,
+    color: '#333',
+    marginTop: 8,
+  },
+  bold: {
+    fontWeight: 'bold',
+  },
+  noImagesText: {
+    fontSize: 16,
+    color: '#888',
+    textAlign: 'center',
+    padding: 20,
+  },
 });

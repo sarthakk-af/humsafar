@@ -1,14 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, Alert, SafeAreaView } from 'react-native';
+import {
+    View,
+    Text,
+    Image,
+    StyleSheet,
+    TouchableOpacity,
+    ScrollView,
+    Alert,
+    SafeAreaView
+} from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { Icon } from '@rneui/base';
-import { saveFormData, loadFormData } from '../../../utils/blogLocalStorage'; // Adjust the path if necessary
+import { saveFormData, loadFormData } from '../../../utils/blogLocalStorage';
 
 export default function UploadScreen({ navigation, route }) {
     const [images, setImages] = useState([]);
 
     useEffect(() => {
-        // Load saved form data when the component mounts
         loadFormData('UploadScreen').then((data) => {
             if (data) {
                 setImages(data.images || []);
@@ -20,8 +28,8 @@ export default function UploadScreen({ navigation, route }) {
         launchImageLibrary({ mediaType: 'photo', selectionLimit: 0 }, response => {
             if (response.didCancel) {
                 console.log('User cancelled image picker');
-            } else if (response.error) {
-                console.log('ImagePicker Error: ', response.error);
+            } else if (response.errorMessage) {
+                console.log('ImagePicker Error: ', response.errorMessage);
             } else {
                 setImages([...images, ...response.assets]);
             }
@@ -43,99 +51,143 @@ export default function UploadScreen({ navigation, route }) {
             images,
         };
 
-        // Save form data
         saveFormData('UploadScreen', formData).then(() => {
             navigation.navigate('AddTagsAndLocation', formData);
         });
     };
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <Icon name="arrow-back" color="black" size={24} />
+                <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
+                    <Icon name="arrow-back-ios" size={20} color="#fff" />
                 </TouchableOpacity>
+                <Text style={styles.title}>Upload Images</Text>
             </View>
-            <Text style={styles.headerTitle}>Upload Images</Text>
-            <View style={styles.imageContainer}>
-                <ScrollView horizontal>
-                    {images.map((image, index) => (
-                        <View key={index} style={styles.imageWrapper}>
-                            <Image source={{ uri: image.uri }} style={styles.image} />
-                            <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveImage(image.uri)}>
-                                <Icon name="close" color="white" size={16} />
+
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+                <View style={styles.imageContainer}>
+                    {images.length === 0 ? (
+                        <Text style={styles.placeholderText}>No images selected</Text>
+                    ) : (
+                        images.map((image, index) => (
+                            <View key={index} style={styles.imageWrapper}>
+                            <TouchableOpacity
+                                style={styles.removeButton}
+                                onPress={() => handleRemoveImage(image.uri)}
+                            >
+                                <Icon name="close" size={18} color="#fff" />
                             </TouchableOpacity>
+                        
+                            <Image source={{ uri: image.uri }} style={styles.image} />
                         </View>
-                    ))}
-                </ScrollView>
-            </View>
+                        
+                        ))
+                    )}
+                </View>
+            </ScrollView>
+
             <TouchableOpacity style={styles.uploadButton} onPress={handleChoosePhotos}>
-                <Icon name="add-a-photo" color="white" size={24} />
+                <Icon name="add-a-photo" color="#fff" size={22} />
             </TouchableOpacity>
+
             <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-                <Icon name="arrow-forward" color="white" size={24} />
+                <Icon name="arrow-forward-ios" color="#fff" size={22} />
             </TouchableOpacity>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    safeArea: {
         flex: 1,
-        padding: 20,
-        backgroundColor: '#f8f8f8',
-    },
-    backButton: {
-        backgroundColor: '#008080',
-        borderRadius: 30,
-        padding: 10,
-        elevation: 5,
+        backgroundColor: '#ffeadd', // Soft peach background
     },
     header: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        paddingHorizontal: 16,
+        paddingTop: 20,
+        marginBottom: 10,
     },
-    headerTitle: {
+    iconButton: {
+        backgroundColor: '#ff6b81',
+        padding: 10,
+        borderRadius: 30,
+        elevation: 4,
+    },
+    title: {
+        flex: 1,
         textAlign: 'center',
-        fontFamily: 'Sansita-Bold',
-        fontSize: 25,
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#2d2a32',
+        marginRight: 40,
+    },
+    scrollContainer: {
+        paddingHorizontal: 20,
+        paddingBottom: 100,
     },
     imageContainer: {
         flexDirection: 'row',
-        marginVertical: 20,
+        flexWrap: 'wrap',
+        justifyContent: 'flex-start',
+        gap: 10,
     },
     imageWrapper: {
+        width: '100%',
+        marginVertical: 10,
+        borderRadius: 20,
+        overflow: 'hidden',
+        backgroundColor: '#fff',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
         position: 'relative',
-        marginRight: 10,
     },
     image: {
-        width: 100,
-        height: 100,
+        width: '100%',
+        height: 200,
+        resizeMode: 'cover',
     },
     removeButton: {
         position: 'absolute',
-        top: 0,
-        right: 0,
-        backgroundColor: 'red',
-        borderRadius: 12,
-        padding: 2,
+        top: 12,
+        right: 12,
+        backgroundColor: '#ff6b81',
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1,
+        elevation: 6,
+    },
+    placeholderText: {
+        fontSize: 16,
+        color: '#aaa',
+        marginTop: 20,
+        textAlign: 'center',
+        width: '100%',
     },
     uploadButton: {
         position: 'absolute',
-        bottom: 80,
+        bottom: 90,
         right: 20,
-        padding: 15,
-        backgroundColor: '#008080',
+        backgroundColor: '#ff6b81',
+        padding: 16,
         borderRadius: 30,
+        elevation: 5,
     },
     nextButton: {
         position: 'absolute',
         bottom: 20,
         right: 20,
-        padding: 15,
-        backgroundColor: '#008080',
+        backgroundColor: '#ff6b81',
+        padding: 16,
         borderRadius: 30,
+        elevation: 5,
     },
 });

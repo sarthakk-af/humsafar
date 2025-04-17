@@ -1,7 +1,18 @@
 import { Icon } from '@rneui/base';
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, SafeAreaView, Alert, ScrollView, TouchableOpacity } from 'react-native';
-import { saveFormData, loadFormData } from '../../../utils/blogLocalStorage'; // Adjust the path if necessary
+import {
+    View,
+    Text,
+    TextInput,
+    Alert,
+    StyleSheet,
+    SafeAreaView,
+    ScrollView,
+    TouchableOpacity,
+    KeyboardAvoidingView,
+    Platform
+} from 'react-native';
+import { saveFormData, loadFormData } from '../../../utils/blogLocalStorage';
 
 export default function AddNewBlog({ navigation, route }) {
     const [title, setTitle] = useState('');
@@ -12,7 +23,6 @@ export default function AddNewBlog({ navigation, route }) {
     const [dateTime, setDateTime] = useState('');
 
     useEffect(() => {
-        // Load saved form data when the component mounts
         loadFormData('AddNewBlog').then((data) => {
             if (data) {
                 setTitle(data.title || '');
@@ -24,12 +34,12 @@ export default function AddNewBlog({ navigation, route }) {
             } else {
                 setDateTime(new Date().toLocaleString());
             }
-        })
+        });
     }, []);
 
     const handleNext = () => {
         if (!title || !body) {
-            Alert.alert('Error', 'Please fill in both the title and body');
+            Alert.alert('Missing Fields', 'Please enter both a title and some content.');
             return;
         }
 
@@ -42,77 +52,116 @@ export default function AddNewBlog({ navigation, route }) {
             travelTips,
         };
 
-        // Save form data
         saveFormData('AddNewBlog', formData).then(() => {
             navigation.navigate('UploadPictureScreen', formData);
         });
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.input}
-                    value={title}
-                    multiline
-                    onChangeText={setTitle}
-                    placeholder="Title"
-                />
-            </View>
-            <View style={styles.inputContainer}>
-                <Text style={styles.dateTime}>{dateTime}</Text>
-            </View>
-            <View style={styles.inputContainer}>
-                <ScrollView style={[styles.input, styles.multilineInput]}>
+        <SafeAreaView style={styles.safeArea}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                style={styles.flex}
+            >
+                <ScrollView contentContainerStyle={styles.container}>
+                    <Text style={styles.heading}>✍️ Create New Blog</Text>
+
+                    <Text style={styles.label}>Blog Title</Text>
                     <TextInput
+                        style={styles.input}
+                        value={title}
+                        onChangeText={setTitle}
+                        placeholder="Enter blog title"
+                        placeholderTextColor="#aaa"
+                    />
+
+                    <Text style={styles.label}>Published on</Text>
+                    <Text style={styles.dateTime}>{dateTime}</Text>
+
+                    <Text style={styles.label}>Blog Content</Text>
+                    <TextInput
+                        style={[styles.input, styles.bodyInput]}
                         value={body}
                         onChangeText={setBody}
-                        placeholder="Blog begins here!!!"
+                        placeholder="Start writing your blog..."
                         multiline
                         textAlignVertical="top"
-                        style={{ flex: 1, fontSize: 20 }}
+                        placeholderTextColor="#aaa"
                     />
+
+                    <TouchableOpacity style={styles.submitButton} onPress={handleNext}>
+                        <Icon name="arrow-forward" color="white" size={24} />
+                        <Text style={styles.submitText}>Next</Text>
+                    </TouchableOpacity>
                 </ScrollView>
-            </View>
-            <TouchableOpacity style={styles.floatingButton} onPress={handleNext}>
-                <Icon name="arrow-forward" color="white" size={24} />
-            </TouchableOpacity>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    safeArea: {
         flex: 1,
-        padding: 20,
-        backgroundColor: 'white',
+        backgroundColor: '#fef6f1',
     },
-    inputContainer: {
-        marginBottom: 1,
+    flex: {
+        flex: 1,
+    },
+    container: {
+        padding: 20,
+        paddingBottom: 80,
+    },
+    heading: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#4b2e83',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    label: {
+        fontSize: 16,
+        color: '#555',
+        marginBottom: 6,
+        marginTop: 12,
     },
     input: {
-        borderRadius: 5,
-        padding: 10,
         backgroundColor: '#fff',
-        fontSize: 30,
+        borderRadius: 12,
+        padding: 14,
+        fontSize: 16,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        color: '#000',
     },
-    multilineInput: {
-        minHeight: 100,
-        maxHeight: '90%',
+    bodyInput: {
+        minHeight: 120,
+        textAlignVertical: 'top',
     },
     dateTime: {
-        fontSize: 16,
-        padding: 10,
-        backgroundColor: '#fff',
-        color: '#333',
+        fontSize: 14,
+        color: '#666',
+        paddingLeft: 6,
+        marginBottom: 8,
     },
-    floatingButton: {
-        position: 'absolute',
-        bottom: 10,
-        right: 10,
-        backgroundColor: '#008080',
+    submitButton: {
+        flexDirection: 'row',
+        backgroundColor: '#4caf50',
         borderRadius: 30,
-        padding: 15,
-        elevation: 5,
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 24,
+        alignSelf: 'center',
+        elevation: 4,
+    },
+    submitText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginLeft: 8,
     },
 });

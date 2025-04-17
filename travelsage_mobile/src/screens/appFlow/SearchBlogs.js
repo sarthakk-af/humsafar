@@ -1,27 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, StyleSheet, SafeAreaView, ActivityIndicator, TouchableOpacity, Image } from 'react-native';
-import { Card, Text, Searchbar } from 'react-native-paper';
-
-const BlogPost = ({ post, onPress }) => (
-    <TouchableOpacity onPress={onPress} underlayColor="#ffffff">
-        <Card style={styles.card}>
-            <View style={styles.cardContent}>
-                <Image
-                    source={{
-                        uri: post.image && post.image.startsWith('http')
-                            ? post.image
-                            : 'https://via.placeholder.com/70',
-                    }}
-                    style={styles.thumbnail}
-                />
-                <View style={styles.textContent}>
-                    <Text style={styles.title}>{post.title}</Text>
-                    <Text style={styles.description}>{post.description}</Text>
-                </View>
-            </View>
-        </Card>
-    </TouchableOpacity>
-);
+import { View, FlatList, SafeAreaView, ActivityIndicator, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text, Searchbar } from 'react-native-paper';
 
 export default function SearchBlogs({ navigation }) {
     const [searchQuery, setSearchQuery] = useState('');
@@ -32,9 +11,8 @@ export default function SearchBlogs({ navigation }) {
 
     const fetchPosts = async () => {
         try {
-            const response = await fetch('http://192.168.0.101:8000/api/blogs');
+            const response = await fetch('http://10.0.22.19:8000/api/blogs');
             if (!response.ok) throw new Error('Failed to fetch blog posts');
-
             const data = await response.json();
             const reversedPosts = data.blogs.reverse();
             setPosts(reversedPosts);
@@ -55,18 +33,18 @@ export default function SearchBlogs({ navigation }) {
     const onChangeSearch = (query) => {
         setSearchQuery(query);
         if (query === '') {
-            setFilteredPosts(posts);
+            setFilteredPosts([]);
         } else {
             const filtered = posts.filter((post) =>
                 post.title.toLowerCase().includes(query.toLowerCase())
             );
-            setFilteredPosts(filtered);
+            setFilteredPosts(filtered.slice(0, 5)); // Show only top 5
         }
     };
 
     if (loading) {
         return (
-            <SafeAreaView style={styles.loadingContainer}>
+            <SafeAreaView style={styles.centered}>
                 <ActivityIndicator animating={true} size="large" color="#e86f6f" />
                 <Text style={styles.loadingText}>Loading...</Text>
             </SafeAreaView>
@@ -75,8 +53,10 @@ export default function SearchBlogs({ navigation }) {
 
     if (error) {
         return (
-            <SafeAreaView style={styles.errorContainer}>
-                <Text style={styles.errorText}>Failed to load blog posts. Please check your internet connection and try again.</Text>
+            <SafeAreaView style={styles.centered}>
+                <Text style={styles.errorText}>
+                    Failed to load blog posts. Please check your internet connection and try again.
+                </Text>
             </SafeAreaView>
         );
     }
@@ -84,15 +64,16 @@ export default function SearchBlogs({ navigation }) {
     return (
         <SafeAreaView style={styles.container}>
             <Searchbar
-                placeholder="Search"
+                placeholder="Search blogs"
                 onChangeText={onChangeSearch}
                 value={searchQuery}
                 style={styles.searchbar}
                 iconColor="#e86f6f"
                 inputStyle={{ color: '#000' }}
             />
-            {filteredPosts.length === 0 ? (
-                <View style={styles.noPostsContainer}>
+
+            {searchQuery !== '' && filteredPosts.length === 0 ? (
+                <View style={styles.centered}>
                     <Text style={styles.noPostsText}>No blog posts found</Text>
                 </View>
             ) : (
@@ -100,10 +81,12 @@ export default function SearchBlogs({ navigation }) {
                     data={filteredPosts}
                     keyExtractor={(item) => item._id}
                     renderItem={({ item }) => (
-                        <BlogPost
-                            post={item}
+                        <TouchableOpacity
                             onPress={() => navigation.navigate('SingleBlog', { blog: item })}
-                        />
+                            style={styles.resultItem}
+                        >
+                            <Text style={styles.resultText}>{item.title}</Text>
+                        </TouchableOpacity>
                     )}
                 />
             )}
@@ -116,72 +99,39 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#fef6f1',
     },
-    loadingContainer: {
+    centered: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fef6f1',
-    },
-    errorContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#fef6f1',
         paddingHorizontal: 20,
     },
-    searchbar: {
-        margin: 15,
-        borderRadius: 25,
-        backgroundColor: '#f6edff',
-    },
-    card: {
-        marginVertical: 8,
-        marginHorizontal: 15,
-        backgroundColor: '#fcf5ff',
-        borderRadius: 16,
-        elevation: 3,
-    },
-    cardContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 10,
-    },
-    thumbnail: {
-        width: 70,
-        height: 70,
-        borderRadius: 10,
-        marginRight: 15,
-        backgroundColor: '#eee',
-    },
-    textContent: {
-        flex: 1,
-    },
-    title: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 4,
-    },
-    description: {
-        fontSize: 14,
-        color: '#666',
-    },
     loadingText: {
-        fontSize: 20,
+        fontSize: 18,
         color: '#777',
-        marginTop: 20,
+        marginTop: 10,
     },
     errorText: {
         fontSize: 18,
         color: 'red',
         textAlign: 'center',
     },
-    noPostsContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+    searchbar: {
+        margin: 15,
+        borderRadius: 25,
+        backgroundColor: '#f6edff',
+    },
+    resultItem: {
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderBottomColor: '#ddd',
+        borderBottomWidth: 1,
+    },
+    resultText: {
+        fontSize: 16,
+        color: '#333',
     },
     noPostsText: {
-        fontSize: 18,
+        fontSize: 16,
         color: '#777',
     },
 });
