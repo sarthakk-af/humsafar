@@ -70,7 +70,7 @@ export const Login = () => {
                 textAlign: 'center',
                 color: '#333333',
             }}>
-                Welcome to humSafar
+                Welcome to humsafar
             </Text>
     
             <Text style={{

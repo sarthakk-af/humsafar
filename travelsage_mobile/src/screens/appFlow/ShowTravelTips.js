@@ -12,7 +12,7 @@ export default function ShowTravelTips({ navigation, route }) {
 
     const fetchTip = async () => {
         try {
-            const response = await fetch(`http://10.0.22.19:8000/api/travel-tips/${route.params.blogId}`);
+            const response = await fetch(`http://192.168.0.101:8000/api/travel-tips/${route.params.blogId}`);
             if (!response.ok) throw new Error('Failed to fetch blog post');
             const data = await response.json();
             setTravelTip(data.travelTip);

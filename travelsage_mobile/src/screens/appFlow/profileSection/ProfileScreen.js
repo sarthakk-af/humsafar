@@ -26,7 +26,7 @@ const ProfileScreen = ({ navigation }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch(`http://10.0.22.19:8000/api/get-user-blogs/${authData._id}`);
+                const response = await fetch(`http://192.168.0.101:8000/api/get-user-blogs/${authData._id}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch blog posts');
                 }
@@ -43,7 +43,7 @@ const ProfileScreen = ({ navigation }) => {
     const renderItem = ({ item }) => (
         <TouchableOpacity style={styles.blogContainer} onPress={() => navigation.navigate('SingleBlog', { blog: item })}>
             <Card style={styles.card}>
-                <Card.Cover source={{ uri: `http://10.0.22.19:8000/${item.images[0]}` }} style={styles.cardImage} />
+                <Card.Cover source={{ uri: `http://192.168.0.101:8000/${item.images[0]}` }} style={styles.cardImage} />
                 <Card.Content>
                     <Text style={styles.title}>{item.title}</Text>
                     <Text style={styles.description}>{item.description}...</Text>

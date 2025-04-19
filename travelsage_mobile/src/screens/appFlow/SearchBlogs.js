@@ -11,12 +11,11 @@ export default function SearchBlogs({ navigation }) {
 
     const fetchPosts = async () => {
         try {
-            const response = await fetch('http://10.0.22.19:8000/api/blogs');
+            const response = await fetch('http://192.168.0.101:8000/api/blogs?limit=5');
             if (!response.ok) throw new Error('Failed to fetch blog posts');
             const data = await response.json();
-            const reversedPosts = data.blogs.reverse();
-            setPosts(reversedPosts);
-            setFilteredPosts(reversedPosts);
+            setPosts(data.blogs);
+            setFilteredPosts(data.blogs);
             setError(false);
         } catch (error) {
             console.error('Error fetching blog posts:', error);
@@ -33,12 +32,12 @@ export default function SearchBlogs({ navigation }) {
     const onChangeSearch = (query) => {
         setSearchQuery(query);
         if (query === '') {
-            setFilteredPosts([]);
+            setFilteredPosts(posts);
         } else {
             const filtered = posts.filter((post) =>
                 post.title.toLowerCase().includes(query.toLowerCase())
             );
-            setFilteredPosts(filtered.slice(0, 5)); // Show only top 5
+            setFilteredPosts(filtered);
         }
     };
 

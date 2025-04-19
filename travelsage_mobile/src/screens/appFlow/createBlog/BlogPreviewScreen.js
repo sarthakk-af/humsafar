@@ -90,7 +90,7 @@ export default function PreviewScreen({ navigation }) {
         });
       });
 
-      const response = await fetch('http://10.0.22.19:8000/api/create-blog', {
+      const response = await fetch('http://192.168.0.101:8000/api/create-blog', {
         method: 'POST',
         body: formData,
       });

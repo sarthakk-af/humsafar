@@ -18,7 +18,7 @@ const BlogPost = ({ post, onPress }) => (
     <Card style={styles.card}>
       {post.images?.[0] && (
         <Image
-          source={{ uri: `http://10.0.22.19:8000/${post.images[0]}` }}
+          source={{ uri: `http://192.168.0.101:8000/${post.images[0]}` }}
           style={styles.cardImage}
         />
       )}
@@ -38,7 +38,7 @@ export const HomeScreen = ({ navigation }) => {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch('http://10.0.22.19:8000/api/blogs');
+      const response = await fetch('http://192.168.0.101:8000/api/blogs');
       if (!response.ok) throw new Error('Failed to fetch blog posts');
       const data = await response.json();
       setPosts(data.blogs.reverse());
@@ -92,7 +92,7 @@ export const HomeScreen = ({ navigation }) => {
         >
           <Icon name="account-circle" type="material" color="white" size={24} />
         </TouchableOpacity>
-        <Text style={styles.header}>humSafar</Text>
+        <Text style={styles.header}>humsafar</Text>
       </View>
 
       {posts.length === 0 ? (
