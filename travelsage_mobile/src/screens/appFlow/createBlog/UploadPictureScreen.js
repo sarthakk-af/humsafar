@@ -136,22 +136,25 @@ const styles = StyleSheet.create({
     },
     imageWrapper: {
         width: '100%',
+        height: 240,
         marginVertical: 10,
         borderRadius: 20,
-        overflow: 'hidden',
-        backgroundColor: '#fff',
+        backgroundColor: 'transparent',
         elevation: 4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 4,
-        position: 'relative',
+        padding: 16, // Adds visible padding around the image
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     image: {
         width: '100%',
-        height: 200,
-        resizeMode: 'cover',
-    },
+        height: '100%',
+        resizeMode: 'contain', // Ensures full image is visible
+        borderRadius: 12,
+    },    
     removeButton: {
         position: 'absolute',
         top: 12,

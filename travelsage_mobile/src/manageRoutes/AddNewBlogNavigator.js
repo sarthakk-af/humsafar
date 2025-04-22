@@ -13,7 +13,7 @@ const AddNewBlogStack = createNativeStackNavigator();
 const AddNewBlogNavigator = () => {
 
     return (
-        <AddNewBlogStack.Navigator>
+        <AddNewBlogStack.Navigator initialRouteName='AddNewBlog'>
             <AddNewBlogStack.Screen
                 name="AddNewBlog"
                 component={AddNewBlog}

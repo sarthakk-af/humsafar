@@ -4,17 +4,21 @@ import { useAuth } from '../contexts/Auth';
 import { AuthStack } from './AuthStack';
 import { AppStack } from './AppStack';
 import { Loading } from '../components/LoadingScreen';
+import Toast from 'react-native-toast-message'; // Don't forget this import
 
 export const Router = () => {
+  const { authData, loading } = useAuth();
 
-  const {authData, loading} = useAuth()
   if (loading) {
-    return <Loading/>
+    return <Loading />;
   }
 
   return (
-    <NavigationContainer>
-        {authData ? <AppStack/> : <AuthStack/>}
-    </NavigationContainer>
+    <>
+      <NavigationContainer>
+        {authData ? <AppStack /> : <AuthStack />}
+      </NavigationContainer>
+      <Toast />
+    </>
   );
 };

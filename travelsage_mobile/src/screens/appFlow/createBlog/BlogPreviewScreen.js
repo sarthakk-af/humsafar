@@ -7,14 +7,16 @@ import {
   ScrollView,
   Dimensions,
   Image,
-  Alert
+  Alert,
 } from 'react-native';
 import { Icon } from '@rneui/base';
 import Swiper from 'react-native-swiper';
 import RNStorage from 'rn-secure-storage';
 import { useAuth } from '../../../contexts/Auth';
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get('window');
+const themeColor = '#FF6B6B';
 
 export default function PreviewScreen({ navigation }) {
   const [data, setData] = useState({});
@@ -50,7 +52,10 @@ export default function PreviewScreen({ navigation }) {
 
   const uploadBlog = async () => {
     try {
-      // Re-fetch data just before uploading
+      if (!authData || !authData._id) {
+        throw new Error('User not authenticated');
+      }
+
       const addNewBlog = JSON.parse(await RNStorage.getItem('AddNewBlog') || '{}');
       const uploadScreen = JSON.parse(await RNStorage.getItem('UploadScreen') || '{}');
       const addTagsAndLocation = JSON.parse(await RNStorage.getItem('AddTagsAndLocation') || '{}');
@@ -68,9 +73,9 @@ export default function PreviewScreen({ navigation }) {
       formData.append('title', mergedData.title || '');
       formData.append('body', mergedData.body || '');
       formData.append('dateTime', mergedData.dateTime || '');
-      formData.append('necessaryItems', mergedData.necessaryItems || []);
+      formData.append('necessaryItems', JSON.stringify(mergedData.necessaryItems || []));
       formData.append('typeOfWear', mergedData.typeOfWear || '');
-      formData.append('tags', mergedData.tags || []);
+      formData.append('tags', JSON.stringify(mergedData.tags || []));
       formData.append('category', mergedData.category || '');
       formData.append('nativeLanguage', mergedData.nativeLanguage || '');
       formData.append('languageCommunication', mergedData.languageCommunication || '');
@@ -83,11 +88,13 @@ export default function PreviewScreen({ navigation }) {
       formData.append('solutions', mergedData.solutions || '');
 
       (mergedData.images || []).forEach((image, index) => {
-        formData.append('images', {
-          uri: image.uri,
-          type: image.type,
-          name: `image-${index}.jpg`,
-        });
+        if (image?.uri) {
+          formData.append('images', {
+            uri: image.uri,
+            type: image.type || 'image/jpeg',
+            name: `image-${index}.jpg`,
+          });
+        }
       });
 
       const response = await fetch('http://192.168.83.1:8000/api/create-blog', {
@@ -101,14 +108,20 @@ export default function PreviewScreen({ navigation }) {
         throw new Error('Failed to upload blog');
       }
 
-      // ✅ Clear local storage after success
       await RNStorage.removeItem('AddNewBlog');
       await RNStorage.removeItem('UploadScreen');
       await RNStorage.removeItem('AddTagsAndLocation');
       await RNStorage.removeItem('TravelTips');
 
-      // ✅ Navigate to initial screen
-      navigation.navigate('AddNewBlog');
+      setData({});
+
+      Toast.show({
+        type: 'success',
+        text1: 'Blog Submitted!',
+        text2: 'Your travel story has been published.',
+      });
+
+      navigation.navigate('Home');
     } catch (error) {
       console.error('Error uploading blog:', error);
       Alert.alert('Error', 'There was a problem uploading your blog. Please try again.');
@@ -147,7 +160,6 @@ export default function PreviewScreen({ navigation }) {
           <Text style={styles.body}>{data.body}</Text>
         </View>
 
-        {/* Tags & Category */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Tags</Text>
           {data.tags?.map((tag, i) => (
@@ -160,7 +172,6 @@ export default function PreviewScreen({ navigation }) {
           </Text>
         </View>
 
-        {/* Travel Essentials */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Travel Essentials</Text>
           {data.necessaryItems?.map((item, i) => (
@@ -173,7 +184,6 @@ export default function PreviewScreen({ navigation }) {
           </Text>
         </View>
 
-        {/* Language Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Language and Communication</Text>
           <Text style={styles.detail}>
@@ -184,7 +194,6 @@ export default function PreviewScreen({ navigation }) {
           </Text>
         </View>
 
-        {/* Culture */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Cultural Insights</Text>
           <Text style={styles.detail}>
@@ -195,7 +204,6 @@ export default function PreviewScreen({ navigation }) {
           </Text>
         </View>
 
-        {/* Logistics */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Travel and Logistics</Text>
           <Text style={styles.detail}>
@@ -213,13 +221,8 @@ export default function PreviewScreen({ navigation }) {
   );
 }
 
-const themeColor = '#FF6B6B';
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
   header: {
     flexDirection: 'row',
     padding: 15,
@@ -227,25 +230,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: themeColor,
   },
-  headerTitle: {
-    fontSize: 20,
-    color: 'white',
-    fontWeight: 'bold',
-  },
+  headerTitle: { fontSize: 20, color: 'white', fontWeight: 'bold' },
   iconButton: {
     backgroundColor: '#ff8a8a',
     padding: 10,
     borderRadius: 50,
   },
-  content: {
-    padding: 15,
-  },
-  swiper: {
-    height: 220,
-  },
-  slide: {
-    alignItems: 'center',
-  },
+  content: { padding: 15 },
+  swiper: { height: 220 },
+  slide: { alignItems: 'center' },
   image: {
     width: width - 30,
     height: 200,
@@ -264,20 +257,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     elevation: 2,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#222',
-  },
-  date: {
-    fontSize: 14,
-    color: '#666',
-    marginVertical: 8,
-  },
-  body: {
-    fontSize: 18,
-    color: '#444',
-  },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#222' },
+  date: { fontSize: 14, color: '#666', marginVertical: 8 },
+  body: { fontSize: 18, color: '#444' },
   section: {
     backgroundColor: '#fff',
     marginTop: 15,
@@ -302,9 +284,7 @@ const styles = StyleSheet.create({
     color: '#333',
     marginTop: 8,
   },
-  bold: {
-    fontWeight: 'bold',
-  },
+  bold: { fontWeight: 'bold' },
   noImagesText: {
     fontSize: 16,
     color: '#888',
