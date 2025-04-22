@@ -5,9 +5,9 @@ import { Card, ActivityIndicator } from 'react-native-paper';
 import { Icon } from '@rneui/base';
 
 const BlogPost = ({ post, onPress }) => (
-    <TouchableHighlight onPress={onPress} underlayColor="#ffffff">
+    <TouchableHighlight onPress={onPress} underlayColor="#fff0f0">
         <Card style={styles.card}>
-            {/* <Card.Cover source={{ uri: `http://192.168.1.12:8000/${post.images[0]}` }} /> */}
+            <Card.Cover source={{ uri: `http://192.168.83.1:8000/${post.images[0]}` }} style={styles.cardImage} />
             <Card.Content>
                 <Text style={styles.title}>{post.title}</Text>
                 <Text style={styles.description}>{post.description}...</Text>
@@ -24,10 +24,8 @@ export const HomeScreen = ({ navigation }) => {
 
     const fetchPosts = async () => {
         try {
-            const response = await fetch('http://192.168.1.12:8000/api/blogs');
-            if (!response.ok) {
-                throw new Error('Failed to fetch blog posts');
-            }
+            const response = await fetch('http://192.168.83.1:8000/api/blogs');
+            if (!response.ok) throw new Error('Failed to fetch blog posts');
             const data = await response.json();
             setPosts(data.blogs.reverse());
             setError(false);
@@ -55,7 +53,7 @@ export const HomeScreen = ({ navigation }) => {
     if (loading) {
         return (
             <SafeAreaView style={styles.loadingContainer}>
-                <ActivityIndicator animating={true} size="large" color="#008080" />
+                <ActivityIndicator animating={true} size="large" color="#FF6B6B" />
                 <Text style={styles.loadingText}>Loading...</Text>
             </SafeAreaView>
         );
@@ -71,16 +69,11 @@ export const HomeScreen = ({ navigation }) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={{
-                paddingHorizontal: 20,
-                flexDirection: 'row',
-                justifyContent: 'flex-start',
-                alignItems: 'flex-end'
-            }}>
+            <View style={styles.headerContainer}>
                 <TouchableOpacity style={styles.floatingButton} onPress={() => navigation.navigate('ProfileScreen')}>
                     <Icon name="account" type='material-community' color="white" size={24} />
-                </TouchableOpacity> 
-                <Text style={styles.header}>TravelSage</Text>
+                </TouchableOpacity>
+                <Text style={styles.header}>humsafar</Text>
             </View>
             {posts.length === 0 ? (
                 <View style={styles.noPostsContainer}>
@@ -100,7 +93,7 @@ export const HomeScreen = ({ navigation }) => {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            tintColor='#008080'
+                            tintColor="#FF6B6B"
                         />
                     }
                 />
@@ -112,45 +105,56 @@ export const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f8f8',
+        backgroundColor: '#FFF4F2', // soft peach background
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f8f8f8',
+        backgroundColor: '#FFF4F2',
     },
     errorContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f8f8f8',
+        backgroundColor: '#FFF4F2',
         paddingHorizontal: 20,
     },
+    headerContainer: {
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        marginTop: 10,
+    },
     header: {
-        fontFamily: 'Sansita-Bold',
-        fontSize: 40,
-        paddingHorizontal: 10
+        fontSize: 32,
+        fontWeight: '700',
+        color: '#333',
+        paddingLeft: 12,
+        textTransform: 'capitalize',
     },
     card: {
         marginVertical: 10,
         marginHorizontal: 15,
+        backgroundColor: '#ffffff',
+        borderRadius: 16,
+        elevation: 4,
+    },
+    cardImage: {
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
     },
     title: {
         fontSize: 18,
         fontWeight: 'bold',
         marginTop: 10,
+        color: '#333',
     },
     description: {
         fontSize: 14,
         color: '#777',
         marginTop: 5,
-    },
-    fab: {
-        position: 'absolute',
-        margin: 16,
-        right: 0,
-        bottom: 0,
     },
     loadingText: {
         fontSize: 20,
@@ -158,7 +162,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
     },
     errorText: {
-        fontSize: 20,
+        fontSize: 18,
         color: 'red',
         textAlign: 'center',
     },
@@ -172,10 +176,10 @@ const styles = StyleSheet.create({
         color: '#777',
     },
     floatingButton: {
-        backgroundColor: '#008080',
+        backgroundColor: '#FF6B6B',
         borderRadius: 30,
         padding: 10,
-        elevation: 5,
+        elevation: 6,
     },
 });
 

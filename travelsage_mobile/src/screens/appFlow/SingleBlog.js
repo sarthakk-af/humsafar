@@ -30,7 +30,7 @@ export default function SingleBlogScreen({ navigation, route }) {
 
   const fetchComments = async () => {
     try {
-      const response = await fetch(`http://192.168.0.100:8000/api/get-comments/${blog._id}`);
+      const response = await fetch(`http://192.168.83.1:8000/api/get-comments/${blog._id}`);
       const result = await response.json();
       if (result.success) {
         setComments(result.comments.reverse());
@@ -53,7 +53,7 @@ export default function SingleBlogScreen({ navigation, route }) {
     if (newComment.trim() === '') return;
 
     try {
-      const response = await fetch('http://192.168.0.100:8000/api/post-comment', {
+      const response = await fetch('http://192.168.83.1:8000/api/post-comment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ export default function SingleBlogScreen({ navigation, route }) {
         <Swiper style={styles.wrapper} showsButtons={true}>
           {blog.images.map((image, index) => (
             <View key={index} style={styles.slide}>
-              <Image source={{ uri: `http://192.168.0.100:8000/${image}` }} style={styles.image} />
+              <Image source={{ uri: `http://192.168.83.1:8000/${image}` }} style={styles.image} />
             </View>
           ))}
         </Swiper>

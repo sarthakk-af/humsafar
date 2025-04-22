@@ -48,7 +48,7 @@ export default function QnASageAI({ navigation, route }) {
     };
 
     try {
-      const response = await fetch('http://192.168.0.100:8000/api/answer', {
+      const response = await fetch('http://192.168.83.1:8000/api/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

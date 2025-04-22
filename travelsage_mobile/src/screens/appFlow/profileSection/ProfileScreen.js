@@ -8,72 +8,69 @@ import {
     TouchableOpacity,
     LayoutAnimation,
     UIManager,
-    Platform
+    Platform,
+    TextInput,
+    Alert,
+    ToastAndroid,
 } from 'react-native';
 import { Icon } from '@rneui/base';
 import { useAuth } from '../../../contexts/Auth';
 import { Card } from 'react-native-paper';
-import { Alert, ToastAndroid } from 'react-native'; // 👈 make sure this is imported
-
 
 if (Platform.OS === 'android') {
-    UIManager.setLayoutAnimationEnabledExperimental && UIManager.setLayoutAnimationEnabledExperimental(true);
+    UIManager.setLayoutAnimationEnabledExperimental &&
+        UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
 const ProfileScreen = ({ navigation }) => {
     const [profileData, setProfileData] = useState({});
     const [blogs, setBlogs] = useState([]);
     const { authData, signOut } = useAuth();
+    const [isEditingBio, setIsEditingBio] = useState(false);
+    const [bioText, setBioText] = useState('');
 
+    const handleDelete = (blogId, title) => {
+        Alert.alert(
+            "Delete Blog",
+            `Are you sure you want to delete the blog titled "${title}"?`,
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            const response = await fetch(`http://192.168.83.1:8000/api/delete-blogs/${blogId}`, {
+                                method: 'DELETE',
+                            });
 
-const handleDelete = (blogId, title) => {
-    Alert.alert(
-        "Delete Blog",
-        `Are you sure you want to delete the blog titled "${title}"?`,
-        [
-            {
-                text: "Cancel",
-                style: "cancel"
-            },
-            {
-                text: "Delete",
-                style: "destructive",
-                onPress: async () => {
-                    try {
-                        const response = await fetch(`http://192.168.0.100:8000/api/delete-blogs/${blogId}`, {
-                            method: 'DELETE',
-                        });
-
-                        if (response.ok) {
-                            setBlogs(prevBlogs => prevBlogs.filter(blog => blog._id !== blogId));
-                            ToastAndroid.show(`Deleted blog: "${title}"`, ToastAndroid.SHORT);
-                        } else {
-                            console.error('Failed to delete blog');
-                            ToastAndroid.show('Failed to delete blog', ToastAndroid.SHORT);
+                            if (response.ok) {
+                                setBlogs(prevBlogs => prevBlogs.filter(blog => blog._id !== blogId));
+                                ToastAndroid.show(`Deleted blog: "${title}"`, ToastAndroid.SHORT);
+                            } else {
+                                ToastAndroid.show('Failed to delete blog', ToastAndroid.SHORT);
+                            }
+                        } catch (error) {
+                            ToastAndroid.show('Error deleting blog', ToastAndroid.SHORT);
                         }
-                    } catch (error) {
-                        console.error('Error deleting blog:', error);
-                        ToastAndroid.show('Error deleting blog', ToastAndroid.SHORT);
                     }
                 }
-            }
-        ]
-    );
-};
-
-
-
+            ]
+        );
+    };
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch(`http://192.168.0.100:8000/api/get-user-blogs/${authData._id}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch blog posts');
-                }
+                const response = await fetch(`http://192.168.83.1:8000/api/get-user-blogs/${authData._id}`);
+                if (!response.ok) throw new Error('Failed to fetch blog posts');
                 const data = await response.json();
                 LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                 setBlogs(data.blogs.reverse());
+
+                // Simulate fetching profile data
+                setProfileData(authData);
+                setBioText(authData?.bio || '');
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -84,31 +81,27 @@ const handleDelete = (blogId, title) => {
     const renderItem = ({ item }) => (
         <TouchableOpacity style={styles.blogContainer} onPress={() => navigation.navigate('SingleBlog', { blog: item })}>
             <Card style={styles.card}>
-                <Card.Cover source={{ uri: `http://192.168.0.100:8000/${item.images[0]}` }} style={styles.cardImage} />
+                <Card.Cover source={{ uri: `http://192.168.83.1:8000/${item.images[0]}` }} style={styles.cardImage} />
                 <Card.Content>
                     <Text style={styles.title}>{item.title}</Text>
                     <Text style={styles.description}>{item.description}...</Text>
-
                     <TouchableOpacity
-    style={{
-        marginTop: 10,
-        backgroundColor: '#FF6B6B',
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 20,
-        alignSelf: 'flex-end'
-    }}
-    onPress={() => handleDelete(item._id, item.title)} // 👈 Pass title here
->
-    <Text style={{ color: 'white', fontWeight: '600' }}>Delete</Text>
-</TouchableOpacity>
-
-
+                        style={{
+                            marginTop: 10,
+                            backgroundColor: '#FF6B6B',
+                            paddingVertical: 6,
+                            paddingHorizontal: 12,
+                            borderRadius: 20,
+                            alignSelf: 'flex-end'
+                        }}
+                        onPress={() => handleDelete(item._id, item.title)}
+                    >
+                        <Text style={{ color: 'white', fontWeight: '600' }}>Delete</Text>
+                    </TouchableOpacity>
                 </Card.Content>
             </Card>
         </TouchableOpacity>
     );
-
 
     return (
         <View style={styles.container}>
@@ -123,11 +116,10 @@ const handleDelete = (blogId, title) => {
                     <Text style={styles.logoutText}>Logout</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.iconButton}>
+                <TouchableOpacity style={styles.iconButton} onPress={() => setIsEditingBio(!isEditingBio)}>
                     <Icon name="edit-2" type="feather" color="#fff" size={18} />
                 </TouchableOpacity>
             </View>
-
 
             {/* Profile Section */}
             <View style={styles.profileInfo}>
@@ -137,8 +129,19 @@ const handleDelete = (blogId, title) => {
                     <Icon name="user" type="font-awesome" size={80} color="#ddd" />
                 )}
                 <Text style={styles.username}>{authData?.firstName || 'Your Name'}</Text>
-                <Text style={styles.bio}>{profileData?.bio || 'Add your bio here'}</Text>
 
+                {isEditingBio ? (
+                    <TextInput
+                        style={styles.bioInput}
+                        value={bioText}
+                        onChangeText={setBioText}
+                        placeholder="Add your bio here"
+                        placeholderTextColor="#aaa"
+                        multiline
+                    />
+                ) : (
+                    <Text style={styles.bio}>{bioText || 'Add your bio here'}</Text>
+                )}
 
                 <View style={styles.statsContainer}>
                     <View style={styles.stat}>
@@ -179,33 +182,13 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFF1E6',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-        shadowOffset: { width: 0, height: 1 },
         elevation: 3,
-    }, iconButton: {
+    },
+    iconButton: {
         backgroundColor: '#FF6B6B',
         padding: 10,
         borderRadius: 25,
         elevation: 3,
-    },
-    headerTitle: {
-        fontSize: 22,
-        fontWeight: '600',
-        color: '#333',
-        fontFamily: 'Sansita-Bold',
-    },
-    floatingButton: {
-        backgroundColor: '#FF6B6B',
-        borderRadius: 50,
-        padding: 10,
-        elevation: 5,
-    },
-    logoutContainer: {
-        alignItems: 'flex-end',
-        paddingHorizontal: 20,
-        marginTop: 10,
     },
     logoutButton: {
         flexDirection: 'row',
@@ -217,7 +200,6 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         elevation: 3,
     },
-
     logoutText: {
         color: '#fff',
         marginLeft: 8,
@@ -248,6 +230,19 @@ const styles = StyleSheet.create({
         color: '#777',
         fontFamily: 'Sansita-Regular',
         textAlign: 'center',
+        marginTop: 4,
+    },
+    bioInput: {
+        fontSize: 14,
+        color: '#333',
+        fontFamily: 'Sansita-Regular',
+        textAlign: 'center',
+        backgroundColor: 'transparent',
+        borderBottomWidth: 1,
+        borderColor: '#FF6B6B',
+        paddingHorizontal: 8,
+        paddingVertical: 6,
+        minWidth: '70%',
         marginTop: 4,
     },
     statsContainer: {

@@ -30,7 +30,7 @@ const AuthProvider = ({ children }) => {
 
     const signIn = async (data) => {
         try {
-            const response = await fetch(`http://192.168.0.100:8000/api/user-login`, {
+            const response = await fetch(`http://192.168.83.1:8000/api/user-login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -55,7 +55,7 @@ const AuthProvider = ({ children }) => {
 
     const signUp = async (data, navigation) => {
         try {
-            const response = await fetch('http://192.168.0.100:8000/api/user-registration', {
+            const response = await fetch('http://192.168.83.1:8000/api/user-registration', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ const AuthProvider = ({ children }) => {
 
     const updateInterests = async (data) => {
         try {
-            const response = await fetch(`http://192.168.0.100:8000/api/update-interests/${data.userId}/interests`, {
+            const response = await fetch(`http://192.168.83.1:8000/api/update-interests/${data.userId}/interests`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
