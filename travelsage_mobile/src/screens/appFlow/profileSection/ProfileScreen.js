@@ -13,6 +13,8 @@ import {
 import { Icon } from '@rneui/base';
 import { useAuth } from '../../../contexts/Auth';
 import { Card } from 'react-native-paper';
+import { Alert, ToastAndroid } from 'react-native'; // 👈 make sure this is imported
+
 
 if (Platform.OS === 'android') {
     UIManager.setLayoutAnimationEnabledExperimental && UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -23,10 +25,49 @@ const ProfileScreen = ({ navigation }) => {
     const [blogs, setBlogs] = useState([]);
     const { authData, signOut } = useAuth();
 
+
+const handleDelete = (blogId, title) => {
+    Alert.alert(
+        "Delete Blog",
+        `Are you sure you want to delete the blog titled "${title}"?`,
+        [
+            {
+                text: "Cancel",
+                style: "cancel"
+            },
+            {
+                text: "Delete",
+                style: "destructive",
+                onPress: async () => {
+                    try {
+                        const response = await fetch(`http://192.168.0.100:8000/api/delete-blogs/${blogId}`, {
+                            method: 'DELETE',
+                        });
+
+                        if (response.ok) {
+                            setBlogs(prevBlogs => prevBlogs.filter(blog => blog._id !== blogId));
+                            ToastAndroid.show(`Deleted blog: "${title}"`, ToastAndroid.SHORT);
+                        } else {
+                            console.error('Failed to delete blog');
+                            ToastAndroid.show('Failed to delete blog', ToastAndroid.SHORT);
+                        }
+                    } catch (error) {
+                        console.error('Error deleting blog:', error);
+                        ToastAndroid.show('Error deleting blog', ToastAndroid.SHORT);
+                    }
+                }
+            }
+        ]
+    );
+};
+
+
+
+
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch(`http://192.168.0.101:8000/api/get-user-blogs/${authData._id}`);
+                const response = await fetch(`http://192.168.0.100:8000/api/get-user-blogs/${authData._id}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch blog posts');
                 }
@@ -43,32 +84,49 @@ const ProfileScreen = ({ navigation }) => {
     const renderItem = ({ item }) => (
         <TouchableOpacity style={styles.blogContainer} onPress={() => navigation.navigate('SingleBlog', { blog: item })}>
             <Card style={styles.card}>
-                <Card.Cover source={{ uri: `http://192.168.0.101:8000/${item.images[0]}` }} style={styles.cardImage} />
+                <Card.Cover source={{ uri: `http://192.168.0.100:8000/${item.images[0]}` }} style={styles.cardImage} />
                 <Card.Content>
                     <Text style={styles.title}>{item.title}</Text>
                     <Text style={styles.description}>{item.description}...</Text>
+
+                    <TouchableOpacity
+    style={{
+        marginTop: 10,
+        backgroundColor: '#FF6B6B',
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+        alignSelf: 'flex-end'
+    }}
+    onPress={() => handleDelete(item._id, item.title)} // 👈 Pass title here
+>
+    <Text style={{ color: 'white', fontWeight: '600' }}>Delete</Text>
+</TouchableOpacity>
+
+
                 </Card.Content>
             </Card>
         </TouchableOpacity>
     );
 
+
     return (
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-  <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
-    <Icon name="arrow-left" type="feather" color="#fff" size={20} />
-  </TouchableOpacity>
+                <TouchableOpacity style={styles.iconButton} onPress={() => navigation.goBack()}>
+                    <Icon name="arrow-left" type="feather" color="#fff" size={20} />
+                </TouchableOpacity>
 
-  <TouchableOpacity style={styles.logoutButton} onPress={() => signOut()}>
-    <Icon name="log-out" type="feather" size={16} color="#fff" />
-    <Text style={styles.logoutText}>Logout</Text>
-  </TouchableOpacity>
+                <TouchableOpacity style={styles.logoutButton} onPress={() => signOut()}>
+                    <Icon name="log-out" type="feather" size={16} color="#fff" />
+                    <Text style={styles.logoutText}>Logout</Text>
+                </TouchableOpacity>
 
-  <TouchableOpacity style={styles.iconButton}>
-    <Icon name="edit-2" type="feather" color="#fff" size={18} />
-  </TouchableOpacity>
-</View>
+                <TouchableOpacity style={styles.iconButton}>
+                    <Icon name="edit-2" type="feather" color="#fff" size={18} />
+                </TouchableOpacity>
+            </View>
 
 
             {/* Profile Section */}
@@ -126,12 +184,12 @@ const styles = StyleSheet.create({
         shadowRadius: 3,
         shadowOffset: { width: 0, height: 1 },
         elevation: 3,
-      },iconButton: {
+    }, iconButton: {
         backgroundColor: '#FF6B6B',
         padding: 10,
         borderRadius: 25,
         elevation: 3,
-      },
+    },
     headerTitle: {
         fontSize: 22,
         fontWeight: '600',
@@ -158,14 +216,14 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         alignSelf: 'center',
         elevation: 3,
-      },
-      
-      logoutText: {
+    },
+
+    logoutText: {
         color: '#fff',
         marginLeft: 8,
         fontSize: 14,
         fontWeight: '600',
-      },
+    },
     profileInfo: {
         alignItems: 'center',
         paddingVertical: 20,

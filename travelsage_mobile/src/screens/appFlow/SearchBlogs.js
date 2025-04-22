@@ -11,7 +11,7 @@ export default function SearchBlogs({ navigation }) {
 
     const fetchPosts = async () => {
         try {
-            const response = await fetch('http://192.168.0.101:8000/api/blogs?limit=5');
+            const response = await fetch('http://192.168.0.100:8000/api/blogs?limit=5');
             if (!response.ok) throw new Error('Failed to fetch blog posts');
             const data = await response.json();
             setPosts(data.blogs);

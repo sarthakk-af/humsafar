@@ -1,3 +1,4 @@
+
 import express from 'express';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
@@ -31,6 +32,10 @@ app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(cors());
 
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'Welcome to the humsafar API!' });
+  });
+
 app.use('/uploads', express.static('uploads'));
 
 app.use('/api', authRoutes);
@@ -38,6 +43,10 @@ app.use('/api', blogRoutes);
 app.use('/api', commentRoutes);
 app.use('/api', qaRoutes);
 
+app.use((req, res, next) => {
+    res.status(404).json({ error: 'Endpoint not found' });
+  });
+  
 const port = 8000;
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);

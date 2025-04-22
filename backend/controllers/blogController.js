@@ -99,3 +99,28 @@ export const searchBlogs = async (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to fetch blog posts' });
     }
 };
+
+export const deleteBlogs = async (req, res) => {
+    try {
+        const { blogId } = req.params;
+        console.log("🟢 Deleting blog with ID:", blogId);
+
+        const blog = await Blog.findByIdAndDelete(blogId);
+        if (!blog) {
+            return res.status(404).json({ success: false, message: 'Blog not found' });
+        }
+
+        const travelTip = await TravelTip.findOneAndDelete({ blogId });
+
+        res.status(200).json({
+            success: true,
+            message: 'Blog and associated travel tip deleted successfully',
+            deletedBlog: blog,
+            deletedTravelTip: travelTip || null
+        });
+    } catch (error) {
+        console.error('❌ Error deleting blog:', error);
+        res.status(500).json({ success: false, error: 'Failed to delete blog' });
+    }
+};
+
